@@ -23,8 +23,8 @@ hub_feed = (@hub_feed.blank?) ? feed_item.hub_feed_for_hub(hub.id) : @hub_feed
   <tr class="feed_item_tags">
     <td></td>
     <td>
-      <% unless feed_item.tags_on(hub.tagging_key).empty? %>
-        <%= raw feed_item.tags_on(hub.tagging_key).collect{|t| tag_display(t, :hub => hub, :hub_feed => hub_feed, :hub_feed_item => feed_item) }.join(' ') %>
+      <% unless feed_item.owner_tags_on(nil, hub.tagging_key).empty? %>
+        <%= raw feed_item.owner_tags_on(nil, hub.tagging_key).collect{|t| tag_display(t, :hub => hub, :hub_feed => hub_feed, :hub_feed_item => feed_item) }.join(' ') %>
       <% end %>
     </td>
   </tr>

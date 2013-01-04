@@ -37,6 +37,8 @@ class Feed < ActiveRecord::Base
 
   attr_accessible :feed_url, :title, :description, :bookmarking_feed
   attr_accessor :raw_feed, :status_code, :dirty, :changelog, :dirty_feed_items
+  
+  acts_as_tagger
 
   has_many :hub_feeds, :dependent => :destroy
   has_many :hubs, :through => :hub_feeds

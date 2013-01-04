@@ -53,7 +53,7 @@ class BookmarkletsController < ApplicationController
     end
 
     # Merge tags.
-    @feed_item.tag_list = [@feed_item.tag_list, params[:feed_item][:tag_list].split(/,\s*/).collect{|t| t.downcase[0,255].gsub(/,/,'_')}].flatten.compact.join(',')
+    current_user.tag(@feed_item, :with => [@feed_item.owner_tag_list_on(current_user, @hub.tagging_key), params[:feed_item][:tag_list].split(/,\s*/).collect{|t| t[0,255].gsub(/,/,'_')}].flatten.compact.join(','), :on => @hub.tagging_key, :skip_save => true)
     @feed = Feed.find(:first, :conditions => {:id => params[:feed_item][:bookmark_collection_id], :bookmarking_feed => true})
 
     # Only add to a feed that the user can add to.

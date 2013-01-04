@@ -31,7 +31,7 @@ class AddTagFilter < ActiveRecord::Base
 
   # Does the actual "filtering" by appending itself into the tag list.
   def act(filtered_tags)
-    filtered_tags << self.tag.name
+    filtered_tags.add(self.tag.name)
   end
 
   def self.title

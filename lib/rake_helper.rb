@@ -16,6 +16,7 @@ module RakeHelper
 
         if f.valid?
           if f.new_record?
+            f.bookmarking_feed = true
             f.save
             u.has_role!(:owner, f)
             u.has_role!(:creator, f)
@@ -27,6 +28,11 @@ module RakeHelper
             u.has_role!(:owner, hf)
             u.has_role!(:creator, hf)
           end
+
+          f.bookmarking_feed = false
+          f.set_next_scheduled_retrieval_on_create
+          f.save
+          f.save_feed_items_on_create
         end
 
       rescue Exception => e

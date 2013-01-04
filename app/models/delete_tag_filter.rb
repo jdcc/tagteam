@@ -31,7 +31,7 @@ class DeleteTagFilter < ActiveRecord::Base
 
   # Does the actual "filtering" by removing a tag from the tag list.
   def act(filtered_tags)
-    filtered_tags.delete(self.tag.name)
+    filtered_tags.remove(self.tag.name)
   end
 
   def self.title

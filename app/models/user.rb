@@ -9,6 +9,8 @@ class User < ActiveRecord::Base
   attr_accessor :login
   acts_as_authorization_subject :association_name => :roles, :join_table_name => :roles_users
 
+  acts_as_tagger
+
   searchable do
     text :first_name, :last_name, :email, :url
     string :email

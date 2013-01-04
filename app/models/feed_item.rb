@@ -147,7 +147,7 @@ class FeedItem < ActiveRecord::Base
   # Re-render tag facets by applying filters but only for this Hub.
   def render_filtered_tags_for_hub(hub = Hub.first)
     #"tag_list" is the source list of tags directly from RSS/Atom feeds.
-    tag_list_for_filtering = self.tag_list.dup
+    tag_list_for_filtering = self.owner_tag_list_on(nil, hub.tagging_key).dup
 
     #Hub tags
     if ! hub.hub_tag_filters.blank?
@@ -169,7 +169,8 @@ class FeedItem < ActiveRecord::Base
     self.hub_feed_item_tag_filters.find(:all, :conditions => {:hub_id => hub.id, :feed_item_id => self.id}).each do|hfitf|
       hfitf.filter.act(tag_list_for_filtering)
     end
-    self.set_tag_list_on("hub_#{hub.id}".to_sym, tag_list_for_filtering.join(','))
+    #TODO: Fix the owner declaration here
+    self.set_owner_tag_list_on(hub.owners.first, hub.tagging_key, tag_list_for_filtering.join(','))
     tag_list_for_filtering
   end
 
@@ -221,18 +222,34 @@ class FeedItem < ActiveRecord::Base
     end
     fi.feed_retrievals << feed_retrieval
     fi.feeds << feed unless fi.feeds.include?(feed)
+
+    pre_update_tags = ActsAsTaggableOn::TagList.new
+    post_update_tags = ActsAsTaggableOn::TagList.new
     # Merge tags. . .
-    pre_update_tags = fi.tag_list.dup.sort
-    # Merge the existing and the new tags together, assign to the it's tag list, uniquify and join
     # Autotruncate tags to be no longer than 255 characters. This would be better done at the model level.
-    fi.tag_list = [fi.tag_list,item.categories.collect{|t| t.mb_chars.downcase[0,255].gsub(/,/,'').strip}].flatten.uniq
-    if pre_update_tags != fi.tag_list.sort
+    contexts = fi.tagging_contexts.dup
+    contexts.delete('tags')
+    if contexts.empty?
+      # If the feed only has one hub, that's our context, otherwise, just make it
+      context = (feed.hubs.count.eql? 1) ? feed.hubs.first.tagging_key : 'tagteam'
+      feed.tag(fi, :with => item.categories.collect{|t| t.mb_chars[0,255].gsub(/,/,'')}, :on => context)
+    else
+      contexts.each do |context|
+        old_tag_list = fi.owner_tag_list_on(feed, context)
+        pre_update_tags.add(old_tag_list)
+        new_tag_list = old_tag_list.add(item.categories.collect{|t| t.mb_chars[0,255].gsub(/,/,'')})
+        post_update_tags.add(new_tag_list)
+        fi.set_owner_tag_list_on(feed, context, new_tag_list)
+      end
+    end
+
+    if pre_update_tags.sort != post_update_tags.sort
       # logger.warn('dirty because tags have changed')
       feed.dirty = true
       unless fi.new_record?
         # Be sure to update the feed changelog here in case
         # an item only has tag changes.
-        item_changelog[:tags] = [pre_update_tags, fi.tag_list]
+        item_changelog[:tags] = [pre_update_tags, post_update_tags]
         feed.changelog[fi.id] = item_changelog
       end
     end

@@ -39,8 +39,8 @@ class ModifyTagFilter < ActiveRecord::Base
 
   def act(filtered_tags)
     if filtered_tags.include?(self.tag.name)
-      filtered_tags.delete(self.tag.name)
-      filtered_tags << self.new_tag.name
+      filtered_tags.remove(self.tag.name)
+      filtered_tags.add(self.new_tag.name)
     end
     filtered_tags
   end
