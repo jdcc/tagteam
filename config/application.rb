@@ -61,5 +61,8 @@ module Tagteam
 
     config.active_record.whitelist_attributes = true
 
+    # Make ActsAsTaggableOn take care of all our case changes
+    ActsAsTaggableOn.force_lowercase = true
+
   end
 end
