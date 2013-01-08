@@ -11,28 +11,18 @@ module RakeHelper
 
     feeds.each do|feed|
       begin
-        f = Feed.find_or_initialize_by_feed_url(feed)
+        # Whenever a feed is created, it needs to have a hub associated with it
+        # through HubFeed.  This way, all tags will have contexts.
+        f = h.feeds.find_or_initialize_by_feed_url(feed)
         puts "Getting: #{feed}"
 
-        if f.valid?
-          if f.new_record?
-            f.bookmarking_feed = true
-            f.save
-            u.has_role!(:owner, f)
-            u.has_role!(:creator, f)
-          end
-
-          hf = HubFeed.find_or_initialize_by_hub_id_and_feed_id(h.id,f.id)
-          if hf.valid? && hf.new_record?
-            hf.save
-            u.has_role!(:owner, hf)
-            u.has_role!(:creator, hf)
-          end
-
-          f.bookmarking_feed = false
-          f.set_next_scheduled_retrieval_on_create
-          f.save
-          f.save_feed_items_on_create
+        if f.valid? && f.new_record?
+          h.save!
+          u.has_role!(:owner, f)
+          u.has_role!(:creator, f)
+          hf = f.hub_feeds.find_by_hub_id(h.id)
+          u.has_role!(:owner, hf)
+          u.has_role!(:creator, hf)
         end
 
       rescue Exception => e

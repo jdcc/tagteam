@@ -282,10 +282,10 @@ class HubsController < ApplicationController
   def add_feed
     @hub = Hub.find(params[:id])
     breadcrumbs.add @hub, hub_path(@hub)
-    @feed = Feed.find_or_initialize_by_feed_url(params[:feed_url])
+    @feed = @hub.feeds.find_or_initialize_by_feed_url(params[:feed_url])
 
     if @feed.new_record? 
-      if @feed.save
+      if @hub.save
         current_user.has_role!(:owner, @feed)
         current_user.has_role!(:creator, @feed)
       else
@@ -297,9 +297,7 @@ class HubsController < ApplicationController
       end
     end
 
-    @hub_feed = HubFeed.new
-    @hub_feed.hub = @hub
-    @hub_feed.feed = @feed
+    @hub_feed = @feed.hub_feeds.find_by_hub_id(@hub.id)
 
     respond_to do |format|
       if @hub_feed.save

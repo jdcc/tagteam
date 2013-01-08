@@ -33,7 +33,7 @@ class Feed < ActiveRecord::Base
   @dirty_feed_items = []
 
   before_create :set_next_scheduled_retrieval_on_create, :unless => Proc.new{|rec| rec.is_bookmarking_feed?}
-  after_create :save_feed_items_on_create, :unless => Proc.new{|rec| rec.is_bookmarking_feed?}
+  after_commit :save_feed_items_on_create, :on => :create, :unless => Proc.new{|rec| rec.is_bookmarking_feed?}
 
   attr_accessible :feed_url, :title, :description, :bookmarking_feed
   attr_accessor :raw_feed, :status_code, :dirty, :changelog, :dirty_feed_items
