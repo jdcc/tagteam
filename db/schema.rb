@@ -11,23 +11,31 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120713184742) do
+ActiveRecord::Schema.define(:version => 20130110213200) do
 
   create_table "add_tag_filters", :force => true do |t|
-    t.integer  "tag_id"
-    t.datetime "created_at", :null => false
-    t.datetime "updated_at", :null => false
+    t.integer  "relevant_tag_id"
+    t.datetime "created_at",      :null => false
+    t.datetime "updated_at",      :null => false
   end
 
-  add_index "add_tag_filters", ["tag_id"], :name => "index_add_tag_filters_on_tag_id"
+  add_index "add_tag_filters", ["relevant_tag_id"], :name => "index_add_tag_filters_on_tag_id"
 
   create_table "delete_tag_filters", :force => true do |t|
-    t.integer  "tag_id"
-    t.datetime "created_at", :null => false
-    t.datetime "updated_at", :null => false
+    t.integer  "relevant_tag_id"
+    t.datetime "created_at",      :null => false
+    t.datetime "updated_at",      :null => false
   end
 
-  add_index "delete_tag_filters", ["tag_id"], :name => "index_delete_tag_filters_on_tag_id"
+  add_index "delete_tag_filters", ["relevant_tag_id"], :name => "index_delete_tag_filters_on_tag_id"
+
+  create_table "deleted_taggings", :force => true do |t|
+    t.integer  "source_filter_id"
+    t.string   "source_filter_type"
+    t.text     "deleted_tagging"
+    t.datetime "created_at",         :null => false
+    t.datetime "updated_at",         :null => false
+  end
 
   create_table "documentations", :force => true do |t|
     t.string   "match_key",   :limit => 100,                       :null => false
@@ -201,14 +209,14 @@ ActiveRecord::Schema.define(:version => 20120713184742) do
   add_index "input_sources", ["republished_feed_id"], :name => "index_input_sources_on_republished_feed_id"
 
   create_table "modify_tag_filters", :force => true do |t|
-    t.integer  "tag_id"
+    t.integer  "relevant_tag_id"
     t.integer  "new_tag_id"
-    t.datetime "created_at", :null => false
-    t.datetime "updated_at", :null => false
+    t.datetime "created_at",      :null => false
+    t.datetime "updated_at",      :null => false
   end
 
   add_index "modify_tag_filters", ["new_tag_id"], :name => "index_modify_tag_filters_on_new_tag_id"
-  add_index "modify_tag_filters", ["tag_id"], :name => "index_modify_tag_filters_on_tag_id"
+  add_index "modify_tag_filters", ["relevant_tag_id"], :name => "index_modify_tag_filters_on_tag_id"
 
   create_table "republished_feeds", :force => true do |t|
     t.integer  "hub_id"

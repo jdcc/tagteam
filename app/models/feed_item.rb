@@ -146,13 +146,11 @@ class FeedItem < ActiveRecord::Base
 
   # Re-render tag facets by applying filters but only for this Hub.
   def render_filtered_tags_for_hub(hub = Hub.first)
-    #"tag_list" is the source list of tags directly from RSS/Atom feeds.
-    tag_list_for_filtering = self.owner_tag_list_on(nil, hub.tagging_key).dup
 
     #Hub tags
     if ! hub.hub_tag_filters.blank?
       hub.hub_tag_filters.each do|htf|
-        htf.filter.act(tag_list_for_filtering)
+        htf.filter.act(self)
       end
     end
 
@@ -161,17 +159,17 @@ class FeedItem < ActiveRecord::Base
     hfs.each do|hf|
       if ! hf.hub_feed_tag_filters.blank?
         hf.hub_feed_tag_filters.each do |hftf|
-          hftf.filter.act(tag_list_for_filtering)
+          hftf.filter.act(self)
         end
       end
     end
+
     #Hub feed item filters
     self.hub_feed_item_tag_filters.find(:all, :conditions => {:hub_id => hub.id, :feed_item_id => self.id}).each do|hfitf|
-      hfitf.filter.act(tag_list_for_filtering)
+      hfitf.filter.act(self)
     end
-    #TODO: Fix the owner declaration here
-    self.set_owner_tag_list_on(hub.owners.first, hub.tagging_key, tag_list_for_filtering.join(','))
-    tag_list_for_filtering
+
+    save
   end
 
   def to_s

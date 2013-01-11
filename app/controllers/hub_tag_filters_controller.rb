@@ -40,18 +40,18 @@ class HubTagFiltersController < ApplicationController
         params[:tag_id] = modify_tag.id
       end
       new_tag = ActsAsTaggableOn::Tag.find_or_create_by_name(params[:new_tag].downcase)
-      @hub_tag_filter.filter = filter_type_model.new(:tag_id => params[:tag_id], :new_tag_id => new_tag.id)
+      @hub_tag_filter.filter = filter_type_model.new(:relevant_tag_id => params[:tag_id], :new_tag_id => new_tag.id)
 
     elsif (filter_type_model == AddTagFilter) && params[:tag_id].blank?
       new_tag = ActsAsTaggableOn::Tag.find_or_create_by_name(params[:new_tag].downcase)
-      @hub_tag_filter.filter = filter_type_model.new(:tag_id => new_tag.id)
+      @hub_tag_filter.filter = filter_type_model.new(:relevant_tag_id => new_tag.id)
 
     else
       if params[:tag_id].blank?
         delete_tag = ActsAsTaggableOn::Tag.find_or_create_by_name(params[:new_tag].downcase)
         params[:tag_id] = delete_tag.id
       end
-      @hub_tag_filter.filter = filter_type_model.new(:tag_id => params[:tag_id])
+      @hub_tag_filter.filter = filter_type_model.new(:relevant_tag_id => params[:tag_id])
     end
 
     respond_to do|format|
@@ -60,6 +60,8 @@ class HubTagFiltersController < ApplicationController
         current_user.has_role!(:creator, @hub_tag_filter)
         flash[:notice] = 'Added that filter to this hub.'
         format.html { render :text => "Added a filter for that tag to \"#{@hub.title}\"", :layout => ! request.xhr? }
+      else
+        raise
       end
     end
   rescue Exception => e

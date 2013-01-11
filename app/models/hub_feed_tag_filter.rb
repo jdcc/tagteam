@@ -24,7 +24,7 @@ class HubFeedTagFilter < ActiveRecord::Base
   # It makes no sense to allow a tag to be filtered multiple times at this level - 
   # so disallow it. This means we need to look up the stack to see what tag we're filtering on .
   def validate_filter_uniqueness
-    filters_with_this_tag = self.class.where(:hub_feed_id => self.hub_feed_id).includes(:filter).collect{|hftf| hftf.filter.tag_id == self.filter.tag_id}.flatten.uniq
+    filters_with_this_tag = self.class.where(:hub_feed_id => self.hub_feed_id).includes(:filter).collect{|hftf| hftf.filter.relevant_tag_id == self.filter.relevant_tag_id}.flatten.uniq
     
     if filters_with_this_tag.include?(true)
       self.errors.add(:base, 'This tag is already being filtered for this feed.')
@@ -39,7 +39,7 @@ class HubFeedTagFilter < ActiveRecord::Base
       Resque.enqueue(HubFeedFeedItemTagRenderer, self.hub_feed.id)
     else
       # act only on the items tagged with a specific tag.
-      Resque.enqueue(HubFeedFeedItemTagRenderer, self.hub_feed.id, self.filter.tag_id)
+      Resque.enqueue(HubFeedFeedItemTagRenderer, self.hub_feed.id, self.filter.relevant_tag_id)
     end
   end
 
