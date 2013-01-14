@@ -229,8 +229,9 @@ class FeedItem < ActiveRecord::Base
     contexts.delete('tags')
     if contexts.empty?
       # If the feed only has one hub, that's our context, otherwise, just make it
-      context = (feed.hubs.count.eql? 1) ? feed.hubs.first.tagging_key : 'tagteam'
-      feed.tag(fi, :with => item.categories.collect{|t| t.mb_chars[0,255].gsub(/,/,'')}, :on => context)
+      feed.hubs.each do |hub|
+          feed.tag(fi, :with => item.categories.collect{|t| t.mb_chars[0,255].gsub(/,/,'')}, :on => hub.tagging_key)
+      end
     else
       contexts.each do |context|
         old_tag_list = fi.owner_tag_list_on(feed, context)
