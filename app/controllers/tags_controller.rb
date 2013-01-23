@@ -1,7 +1,8 @@
 class TagsController < ApplicationController
 
   before_filter :load_hub
-  before_filter :load_tag_from_name, :only => [:rss, :atom, :show, :json, :xml]
+  before_filter :load_tag_from_name, :only => [:rss, :atom, :show, :json, :xml, :user_tags]
+  before_filter :load_user, :only => [:user_tags]
   before_filter :load_feed_items_for_rss, :only => [:rss, :atom, :json, :xml]
   before_filter :add_breadcrumbs
 
@@ -81,6 +82,16 @@ class TagsController < ApplicationController
     render :layout => ! request.xhr?
   end
 
+  def user_tags
+    owners = [@user]
+    tag_filters = @user.my_objects_in([HubTagFilter, HubFeedTagFilter, HubFeedItemTagFilter], @hub)
+    tag_filters.each do |tag_filter|
+      owners << tag_filter.filter
+    end
+    @feed_items = FeedItem.joins('LEFT OUTER JOIN taggings ON feed_items.id = taggings.taggable_id').joins('LEFT OUTER JOIN tags on taggings.tag_id = tags.id').where('taggings.tagger_id' => owners, 'tags.name' => @tag.name).paginate(:order => 'date_published desc', :page => params[:page], :per_page => get_per_page)
+    render :layout => ! request.xhr?
+  end
+
   private
 
   def load_hub
@@ -111,6 +122,18 @@ class TagsController < ApplicationController
       render 'hubs/index', :layout => ! request.xhr?, :status => 404
     end
   end
+
+  def load_user
+    unless params[:username].blank?
+      @user = User.find_by_username(params[:username])
+    end
+    unless @user
+      flash[:error] = "We're sorry, but '#{params[:username]}' is not a known user"
+      @hubs = Hub.paginate(:page => params[:page], :per_page => get_per_page)
+      render 'hubs/index', :layout => ! request.xhr?, :status => 404
+    end
+  end
+
 
   def load_feed_items_for_rss
     @feed_items = FeedItem.tagged_with(@tag.name, :on => @hub.tagging_key).limit(50).order('date_published desc')
