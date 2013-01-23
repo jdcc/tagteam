@@ -127,12 +127,11 @@ class FeedItem < ActiveRecord::Base
 
   def tag_list_array_for_indexing
     # tag_list as provided by ActsAsTaggableOn always does a sql query. Construct the tag list correctly.
-    self.tags.collect{|t| t.name}
+    self.taggings.collect{|tagging| tagging.tag.name}.uniq
   end
 
   def tag_list_string_for_indexing
-    # tag_list as provided by ActsAsTaggableOn always does a sql query. Construct the tag list correctly.
-    self.tags.collect{|t| t.name}.join(', ')
+    tag_list_array_for_indexing.join(', ')
   end
 
   # Re-render all tag facets for this FeedItem.
