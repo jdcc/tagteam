@@ -21,7 +21,8 @@ hub_feed = (@hub_feed.blank?) ? feed_item.hub_feed_for_hub(hub.id) : @hub_feed
       </div>
       <div class='feed_item_tags'>
         <% unless feed_item.owner_tags_on(nil, hub.tagging_key).empty? %>
-          <%= raw feed_item.owner_tags_on(nil, hub.tagging_key).collect{|t| tag_display(t, :hub => hub, :hub_feed => hub_feed, :hub_feed_item => feed_item) }.join(' ') %>
+            <% # uniq needs to be here because the same tag can come from multiple places %>
+          <%= raw feed_item.owner_tags_on(nil, hub.tagging_key).uniq.collect{|t| tag_display(t, :hub => hub, :hub_feed => hub_feed, :hub_feed_item => feed_item) }.join(' ') %>
         <% end %>
       </div>
     </td>

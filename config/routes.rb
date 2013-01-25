@@ -51,6 +51,7 @@ Tagteam::Application.routes.draw do
     end
     resources :tags
     resources :hub_feed_tag_filters
+    match 'tag/:name' => 'tags#feed_tag', :as => 'tag'
   end
 
   match 'remix/:url_key' => 'republished_feeds#show', :as => 'remix'
@@ -64,7 +65,7 @@ Tagteam::Application.routes.draw do
     match 'tag/xml/:name' => 'tags#xml', :as => 'tag_xml', :constraints => { :name => /.+/ }
     match 'tag/:name' => 'tags#show', :as => 'tag_show', :constraints => { :name => /.+/ }
 
-    match 'user/:username/tag/:name' => 'tags#user_tags', :as => 'user_tags', :constraints => { :name => /.+/ }
+    match 'user/:username/tag/:name' => 'tags#user_tag', :as => 'user_tag', :constraints => { :name => /.+/ }
 
     member do
       post 'recalc_all_tags'

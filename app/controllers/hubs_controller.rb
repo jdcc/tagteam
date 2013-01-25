@@ -270,13 +270,20 @@ class HubsController < ApplicationController
 
     if params[:hub_feed_item_id].to_i != 0
       @feed_item = FeedItem.find(params[:hub_feed_item_id], :select => FeedItem.columns_for_line_item)
-      tagger = @feed_item.taggings.find_by_tag_id(@tag.id).tagger
-      case tagger.class.name
-      when 'Feed'
-        @owner = HubFeed.find_by_hub_id_and_feed_id(@hub.id, tagger.id)
-      when 'AddTagFilter', 'ModifyTagFilter', 'DeleteTagFilter'
-        @owner = tagger.filter.owners.first
+
+      taggings = @feed_item.taggings.where(:tag_id => @tag.id)
+      @owners = []
+      taggings.each do |tagging|
+          logger.warn("Tagger: #{tagging.tagger}")
+          case tagging.tagger.class.name
+          when 'Feed'
+              @owners << HubFeed.find_by_hub_id_and_feed_id(@hub.id, tagging.tagger.id)
+          when 'AddTagFilter', 'ModifyTagFilter', 'DeleteTagFilter'
+              @owners << tagging.tagger.filter.owners.first
+          end
       end
+      logger.warn("Owners: #{@owners}")
+
       @already_filtered_for_hub_feed_item = HubFeedItemTagFilter.where(:feed_item_id => params[:hub_feed_item_id].to_i).includes(:filter).collect{|hfitf| hfitf.filter.relevant_tag_id == params[:tag_id].to_i}.flatten.include?(true)
     end
 

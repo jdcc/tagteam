@@ -1,8 +1,8 @@
 class TagsController < ApplicationController
 
   before_filter :load_hub
-  before_filter :load_tag_from_name, :only => [:rss, :atom, :show, :json, :xml, :user_tags]
-  before_filter :load_user, :only => [:user_tags]
+  before_filter :load_tag_from_name, :only => [:rss, :atom, :show, :json, :xml, :user_tag, :feed_tag]
+  before_filter :load_user, :only => [:user_tag]
   before_filter :load_feed_items_for_rss, :only => [:rss, :atom, :json, :xml]
   before_filter :add_breadcrumbs
 
@@ -82,13 +82,27 @@ class TagsController < ApplicationController
     render :layout => ! request.xhr?
   end
 
-  def user_tags
+  def user_tag
     owners = [@user]
     tag_filters = @user.my_objects_in([HubTagFilter, HubFeedTagFilter, HubFeedItemTagFilter], @hub)
     tag_filters.each do |tag_filter|
       owners << tag_filter.filter
     end
-    @feed_items = FeedItem.joins('LEFT OUTER JOIN taggings ON feed_items.id = taggings.taggable_id').joins('LEFT OUTER JOIN tags on taggings.tag_id = tags.id').where('taggings.tagger_id' => owners, 'tags.name' => @tag.name).paginate(:order => 'date_published desc', :page => params[:page], :per_page => get_per_page)
+    @feed_items = FeedItem.joins('LEFT OUTER JOIN taggings ON feed_items.id = taggings.taggable_id')
+        .joins('LEFT OUTER JOIN tags on taggings.tag_id = tags.id').where('tags.name' => @tag.name)
+    conditions, values = [], []
+    owners.each do |owner|
+        conditions << '(taggings.tagger_id = ? AND taggings.tagger_type = ?)'
+        values += [owner.id, owner.class.name]
+    end
+    @feed_items = @feed_items.where(conditions.join(' OR '), *values)
+    @feed_items = @feed_items.paginate(:order => 'date_published desc', :page => params[:page], :per_page => get_per_page)
+    render :layout => ! request.xhr?
+  end
+
+  def feed_tag
+    @feed_items = FeedItem.tagged_with(@tag.name, :on => @hub_feed.hub.tagging_key, :owned_by => @hub_feed.feed)
+        .paginate(:order => 'date_published desc', :page => params[:page], :per_page => get_per_page)
     render :layout => ! request.xhr?
   end
 

@@ -36,7 +36,8 @@ class User < ActiveRecord::Base
     else
         class_of_interest = class_of_interest.name
     end
-    roles.includes(:authorizable).find(:all, :conditions => {:authorizable_type => class_of_interest, :name => 'owner'}).collect{|r| r.authorizable}.reject{|o| o.hub_id != hub.id}
+    roles.includes(:authorizable).find(:all, :conditions => {:authorizable_type => class_of_interest, :name => 'owner'})
+        .collect{|r| r.authorizable}.reject{ |o| o.hub.id != hub.id}
   end
 
   def my_bookmarkable_hubs
